@@ -1,0 +1,706 @@
+---
+title: "Estadística"
+subtitle: "Subindexado de datos y graficas"
+author: "Carlos Hernández Salvatierra"
+date: "21 de Junio de 2026"
+output:
+  rmdformats::material:
+    highlight: kate
+    cards: false
+---
+
+
+```{r knitr_init, echo=FALSE, cache=FALSE}
+library(knitr)
+library(rmdformats)
+
+## Global options
+options(max.print="75")
+opts_chunk$set(echo=TRUE,
+	             cache=TRUE,
+               prompt=FALSE,
+               tidy=TRUE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE)
+opts_knit$set(width=75)
+```
+
+# Subindexado de vectores atómicos
+
+El subindexado de vectores atómicos permite obtener partes de un vector atómico (los primeros elementos, los 10 últimos, etc.) y es útil en muchos tipos de análisis que suceden en diversas ramas de la ciencia. Supongamos que  tenemos lo siguiente:
+
+```{r pressure, eval=TRUE}
+dnormales <- rnorm(20)    # 10 numeros aleatorios de una dist. normal
+dnormales   # Imprimimos el vector
+
+```
+
+## Ejercicios:
+1.- ¿Cuál es el resultado de `dnormales[order(x)]`, `dnormales[1:length(vec)]`, `dnormales[-20]`, `dnormales[vec>0.5]`?
+
+### Código:
+
+```{r}
+# Vector ordenado de menor a mayor
+dnormales[order(dnormales)]
+
+# Todos los elementos del vector
+dnormales[1:length(dnormales)]
+
+# Todos los elementos excepto el último
+dnormales[-20]
+
+# Valores mayores que 0.5
+dnormales[dnormales > 0.5]
+```
+
+**Respuesta:**
+
+- `dnormales[order(dnormales)]` ordena el vector de menor a mayor. La función `order()` devuelve las posiciones de los elementos en orden ascendente y luego esas posiciones se usan para organizar el vector.
+- `dnormales[1:length(dnormales)]` devuelve todos los elementos del vector, selecciona desde la primera hasta la última posición.
+- `dnormales[-20]` elimina el elemento que está en la posición 20 y muestra los otros 19.
+- `dnormales[dnormales > 0.5]` utiliza un filtro para elegir solo los valores del vector que son mayores a 0.5.
+
+2.- ¿Qué sucede si hacemos `dnormales[0:3]`? ¿Cuál es la longitud del vector?
+
+### Código:
+
+```{r}
+dnormales[0:3]
+
+length(dnormales[0:3])
+```
+
+**Respuesta:**
+
+En R el índice **0** no corresponde a ninguna posición, asi que se ignora. El vector `0:3` es igual a los índices `0, 1, 2, 3`, pero solamente las posiciones 1, 2 y 3 son válidas. Por eso el resultado tiene los tres primeros elementos del vector.
+
+La longitud del vector obtenido es **3**.
+
+3.- Ahora suponga que `x <- c(1,24,8)` y `uno <- c(T,T,F)`. ¿Qué sucede si hacemos `x[uno]`? ¿Y si hacemos `x[as.double(uno)]`?
+
+### Ejercicio 3
+
+```{r}
+x <- c(1,24,8)
+uno <- c(TRUE,TRUE,FALSE)
+
+x[uno]
+
+x[as.double(uno)]
+```
+
+**Respuesta:**
+
+Cuando se ejecuta `x[uno]`, R entiende `uno` como un vector lógico. Los valores `TRUE` muestran las posiciones que deben seleccionarse y `FALSE` cuáles deben ser ignoradas. Por eso el resultado es:
+
+```text
+[1] 1 24
+```
+
+Cuando se ejecuta `x[as.double(uno)]`, el vector lógico se convierte en números:
+
+```r
+as.double(uno)
+```
+
+produce:
+
+```text
+[1] 1 1 0
+```
+
+R interpreta estos valores como índices. El índice 1 selecciona el primer elemento, mientras que el índice 0 no selecciona ningún elemento. Como el índice 1 aparece dos veces, el resultado es:
+
+```text
+[1] 1 1
+```
+
+Esto nos enseña que la indexación lógica y la indexación numérica producen resultados diferentes.
+
+#### Nota {.bs-callout .bs-callout-orange}
+
+>Puede referirse a las 
+<a href="https://monoxide2000.github.io/slidesUQroo2" alt= "Enlace para slides" target="_blank">diapositivas</a>
+
+
+
+
+# Subindexado de listas
+
+Las listas se pueden subindexar mediante los operadores `[`, `[[` y `$`. Recordemos que cuando indexamos con `[`, el resultado siempre es del mismo tipo. Ahora suponga que tenemos la siguiente lista:
+
+```{r, eval= TRUE}
+listaPrueba <- list(Mayusculas = LETTERS[1:15], Ciudades = c("Cancun", "Playa", "Chetumal", "Merida"), casos = list(a=23, b= 1:8, c=list(d=1,e=TRUE)))
+str(listaPrueba)
+```
+
+Ejercicios (en base al objeto `listaPrueba`),
+
+1.- ¿Con qué comando puedo obtener la lista casos?
+
++ La lista `casos` puede obtenerse usando `listaPrueba$casos` o `listaPrueba[[3]]`. Los dos comandos devuelven el tercer elemento de la lista principal, que es la sublista llamada `casos`.
+
+2.- ¿Cómo puedo obtener el único  valor lógico de `listaPrueba`?
+
++ El único valor lógico en `listaPrueba` es `TRUE`. Está dentro de la lista `casos`, en el elemento `c`, con el nombre `e`
+
+3.- ¿Qué sucede si hago `listaPrueba[[3]]$c[[2]]`, es esto equivalente a 
+`listaPrueba$casos[[3]][[2]]`? Explique
+
++ Ambos comandos devuelven exactamente el mismo resultado (`TRUE`).
+
+Esto pasa porque ambos recorren la misma estructura de la lista:
+
+- `listaPrueba[[3]]` selecciona la lista `casos`.
+- `$c` selecciona la sublista `c`.
+- `[[2]]` obtiene el segundo elemento de esa sublista, que corresponde al valor lógico `TRUE`.
+
+En el segundo comando se accede a los mismos elementos usando nombres (`$casos`) y posiciones (`[[3]]`, `[[2]]`). Por eso ambos son equivalentes.
+
+4.- ¿Cuál es la diferencia entre `listaPrueba[1]` y `listaPrueba[[1]]`?
+
++ `listaPrueba[1]` devuelve una **lista** que tiene solo el primer elemento.
+
++ `listaPrueba[[1]]` devuelve directamente el contenido del primer elemento, el vector de letras.
+
+La diferencia principal es que `[]` conserva el tipo de dato original (lista) y `[[ ]]` extrae el objeto almacenado dentro de la lista.
+
+5.- ¿Cómo puedo obtener el objeto `"Chetumal"`?
+
+### Código:
+
+```{r}
+listaPrueba$Ciudades[3]
+
+# Otra forma
+listaPrueba[[2]][3]
+```
+
+**Respuesta:**
+
++ El objeto `"Chetumal"` corresponde al tercer elemento del vector `Ciudades`. Puede obtenerse usando cualquiera de estos dos comandos.
+
+6.- ¿Cómo puedo obtener el tercer elemento de `b`?
+
+### Código:
+
+```{r}
+listaPrueba$casos$b[3]
+
+```
+
+**Respuesta:**
+
++ El objeto `b` es el vector `1:8`. Al seleccionar la tercera posición se obtiene el valor **3**.
+
+# Indexado de matrices
+
+
+Suponga que tenemos la matriz:
+
+```{r, eval=TRUE}
+matriz1 <- matrix(rnorm(20), nrow=5)
+dim(matriz1)
+```
+
+## Ejercicios:
+
+A partir de `matriz1`, hallar:
+
+1.- La matriz que consta de las primeras dos columnas de `matriz1`.
+
+### Respuesta:
+
+```{r}
+# Primeras dos columnas de la matriz
+matriz1[, 1:2]
+```
+
+2.- La matriz que consta de las primeras dos filas y dos columnas de `matriz1`.
+
+### Respuesta:
+
+```{r}
+# Primeras dos filas y primeras dos columnas
+matriz1[1:2, 1:2]
+```
+
+3.- La matriz que consta del elemento $a_{2,3}$ de `matriz1`
+
+### Respuesta:
+
+```{r}
+# Elemento a_{2,3}
+matriz1[2,3]
+```
+
+4.- ¿Son equivalentes los comandos `matriz1[c(1,2),c(3,4)]` y `matriz1[1:2,c(3,4)]`? (tip: puede probar con el comando `identical`)
+
+### Respuesta:
+
+```{r}
+matriz1[c(1,2), c(3,4)]
+
+matriz1[1:2, c(3,4)]
+
+identical(
+  matriz1[c(1,2), c(3,4)],
+  matriz1[1:2, c(3,4)]
+)
+```
+
+**Respuesta:**
+
+Si son equivalentes.
+
+- `c(1,2)` crea el vector de índices `1, 2`.
+- `1:2` genera el mismo vector.
+
+La función `identical()` devuelve **TRUE**, confirmando que los dos comandos hacen la misma submatriz.
+
+# Subindexado de `data.frame`
+
+El subindexado de `data.frames` es similar al subindexado por medio de listas y matrices. En este caso nos concentraremos en el paquete `dplyr` que permite manipular `data.frames`. Cualquier paquete en `R` se puede instalar mediante el comando `install.packages(<nombre.paquete>)`, por ejemplo para instalar `dplyr` hacemos:
+
+```{r, eval=FALSE}
+install.packages("dplyr", dependencies = TRUE)   # instalo el paquete
+library(dplyr)         # Cargo el paquete para trabajar con sus funciones
+
+```
+
+## Tarea:
+
+
+1.- Investigar para qué sirve el paquete `dplyr`.
+
++ El paquete **`dplyr`** es una de las herramientas más usadas para la manipulación y transformación de datos en R. Permite trabajar de manera sencilla con objetos de tipo `data.frame` y `tibble`, facilitando tareas como seleccionar columnas, filtrar filas, ordenar datos, crear nuevas variables, agrupar información y realizar resúmenes estadísticos.
+
+2.- ¿Cuáles son los comandos importantes del paquete `dplyr`?
+
++ Los comandos más utilizados de `dplyr` son:
+
+| Función | Descripción |
+|---------|-------------|
+| `select()` | Selecciona una o varias columnas. |
+| `filter()` | Filtra filas según una condición. |
+| `arrange()` | Ordena las filas. |
+| `mutate()` | Crea nuevas columnas o modifica las existentes. |
+| `summarise()` | Calcula estadísticas resumen. |
+| `group_by()` | Agrupa los datos para realizar operaciones por grupos. |
+| `rename()` | Cambia el nombre de las columnas. |
+| `distinct()` | Elimina filas duplicadas. |
+
++ Estas funciones pueden combinarse mediante el operador `%>%`, lo que facilita la lectura y organización del código.
+
+3.- Supongamos que tenemos un `data.frame` `df <- data.frame(a=1:8, letras =letter[1:8])`, qué sucede si aplico `select(df, a)`. ¿Y si aplico `filter(df, a<5)`?
+
+### REspuesta
+
+```{r}
+library(dplyr)
+
+# Crear el data.frame
+df <- data.frame(
+  a = 1:8,
+  letras = letters[1:8]
+)
+
+# Seleccionar la columna a
+select(df, a)
+
+# Filtrar las filas donde a es menor que 5
+filter(df, a < 5)
+```
+
+**Respuesta:**
+
+El comando
+
+```r
+select(df, a)
+```
+
+selecciona únicamente la columna **a**, eliminando las demás columnas del `data.frame`.
+
+El resultado es:
+
+| a |
+|---|
+|1|
+|2|
+|3|
+|4|
+|5|
+|6|
+|7|
+|8|
+
+---
+
+El comando
+
+```r
+filter(df, a < 5)
+```
+
+selecciona únicamente las filas donde la variable **a** es menor que 5.
+
+El resultado es:
+
+| a | letras |
+|---|---------|
+|1|a|
+|2|b|
+|3|c|
+|4|d|
+
+En otras palabras, `select()` trabaja sobre **columnas**, mientras que `filter()` trabaja sobre **filas**.
+
+# Gráficos de funciones bidimensionales
+
+Los gráficos permiten mostrar múltiples características de una función. Los máximos, mínimos, etc., son métricas que nos dicen mucho acerca del comportamiento de una función. `R` nos permite graficar funciones de manera sencilla utilizando el concepto de vector. Por ejemplo, quizás estemos interesados en conocer la forma de onda de la función seno acotada, la cual se define matemáticamente mediante la siguiente fórmula:
+
+$$
+f(t) = \begin{cases}
+\sin(2 \pi t) & \mbox{para} -1 < t < 1\\
+0 & \mbox{resto}.
+\end{cases}
+$$
+Y la cual en `R` se graficar? de la siguiente manera:
+
+```{r eval=TRUE}
+
+t  <- seq(-1, 1, length=100)
+ft   <- sin(2*pi*t)           # Se calcula la funcion seno a partir de t
+plot(t, ft, type="l", xlim=c(-4,4), ylim=c(-1.5,1.5), main="Funcion seno", xlab="tiempo", ylab="Valores")
+grid()
+
+```
+
+`R` permite añadir gráficos o puntos mediante las funciones `lines()` y `points()`. El siguiente código ejemplifica lo anterior.
+
+```{r eval=T}
+t  <- seq(-3,3, length=200)
+f1 <- sin(2*pi*(t))
+f2 <- sin(2*pi*(t-1/4))
+f3 <- sin(2*pi*(t-1/2))
+plot(t,f1, type= "l", main="Funcion seno y versiones", xlab="tiempo", ylab="Valores")
+grid()
+lines(t,f2, col="red")
+points(t,f3,col="blue")
+
+
+```
+
+De igual manera se pueden definir funciones por tramos con el comando `ifelse()`, por ejemplo grafiquemos la siguiente función:
+
+$$
+f(t) = \begin{cases}
+2+t & \; -2<t<-1\\
+1   & \; -1<t<1\\
+2-t & \;1<t<2\\
+0  & \; \mbox{resto}
+\end{cases}
+$$
+
+```{r eval=T}
+t <- seq(-3,3, length=100)
+ft <- ifelse(t> -2 & t < -1, 2+t, ifelse(t>= -1 & t <= 1, 1, ifelse(t>1 & t< 2, 2-t, 0)))
+plot(t, ft, type = "l", main="Funcion por tramos", xlab="tiempo", ylab="Valores")
+grid()
+```
+
+### Ejercicios:
+
+
+Graficar las siguientes funciones:
+
+$$
+f(t) = \begin{cases}
+1 & \; t>0\\
+0 & \; \mbox{resto}
+\end{cases}
+$$
+### Ejercicio 1
+
+```{r}
+t <- seq(-2, 2, length = 200)
+
+ft <- ifelse(t > 0, 1, 0)
+
+plot(t, ft,
+     type = "l",
+     lwd = 2,
+     col = "blue",
+     main = "Funcion escalón",
+     xlab = "t",
+     ylab = "f(t)")
+
+grid()
+```
+
+
+$$
+f(t) = \begin{cases}
+1+t & \; -1<t<0\\
+1-t & \; 0 \le t<1\\
+0 & \; \mbox{resto}
+\end{cases}
+$$
+### Ejercicio 2
+
+```{r}
+t <- seq(-2, 2, length = 200)
+
+ft <- ifelse(
+  t > -1 & t < 0,
+  1 + t,
+  ifelse(
+    t >= 0 & t < 1,
+    1 - t,
+    0
+  )
+)
+
+plot(t, ft,
+     type = "l",
+     lwd = 2,
+     col = "red",
+     main = "Funcion triangular",
+     xlab = "t",
+     ylab = "f(t)")
+
+grid()
+```
+
+
+$$
+f(t) = \begin{cases}
+\mbox{e}^{-2t} & \; 0<t<2\\
+1+t & \;  -1<t<0\\
+0 & \; \mbox{resto}
+\end{cases}
+$$
+### Ejercicio 3
+
+```{r}
+t <- seq(-2, 3, length = 300)
+
+ft <- ifelse(
+  t > 0 & t < 2,
+  exp(-2*t),
+  ifelse(
+    t > -1 & t < 0,
+    1 + t,
+    0
+  )
+)
+
+plot(t, ft,
+     type = "l",
+     lwd = 2,
+     col = "darkgreen",
+     main = "Funcion por tramos",
+     xlab = "t",
+     ylab = "f(t)")
+
+grid()
+```
+
+
+# Gráficos 3D
+
+Los gráficos en 3D permiten visualizar funciones del tipo:  $f(x,y)$, donde $x$ e $y$ representan variables independientes. Como ejemplo veamos la forma en la cual `R` grafica la siguiente función $f(x,y) = \sqrt{16-4x^2-y^2}$:
+
+
+```{r eval=T}
+x <- seq(-2,2,length=50)
+y <- seq(-4,4, length=50)
+z <- outer(x,y,function(x,y) sqrt(16-4*x^2-y^2))
+z[is.na(z)] <- 0
+persp(x,y,z, theta=-30, expand=0.5,ticktype = "detailed")
+persp(x,y,z, theta=30, expand=0.5, ticktype = "detailed")
+image(x,y,z)
+contour(x,y,z, add=TRUE)
+
+```
+
+Ejemplos: Ahora veamos la manera de hacerla con mis funciones.
+
+#### Ahora para la función $z = y^2-x^2$
+
+
+```{r eval=T}
+x <- seq(-3,3,length=50)
+y <- seq(-3,3, length=50)
+z <- outer(x,y,function(x,y) y^2-x^2)
+persp(x,y,z, theta=-30, expand=0.6, ticktype = "detailed")
+persp(x,y,z, theta=30, expand=0.6, ticktype = "detailed")
+image(x,y,z)
+contour(x,y,z, add=TRUE)
+
+```
+
+
+#### Ahora para la función $f(x,y)= (2+x^2-y^2) \mbox{e}^{1-x^2-(y^2)/4}$
+
+
+```{r eval=T}
+x <- seq(-3,3,length=50)
+y <- seq(-3,3, length=50)
+z <- outer(x,y,function(x,y) (2-y^2+x^2)*exp(1-x^2-(y^2)/4))
+persp(x,y,z, theta=-30, expand=0.5, ticktype = "detailed")
+persp(x,y,z, theta=30,expand=0.5,ticktype = "detailed")
+image(x,y,z)
+contour(x,y,z, add=TRUE)
+
+
+```
+
+#### Ejercicios:
+
+
+![Ejercicios para graficar superficies y contornos en R.](ejercicios.png)
+
++ 49
+
+```{r eval=TRUE}
+x <- seq(-5,5,length=50)
+y <- seq(-5,5,length=50)
+
+z <- outer(x,y,function(x,y) x+y)
+
+persp(x,y,z,theta=-30,expand=0.6,ticktype="detailed")
+persp(x,y,z,theta=30,expand=0.6,ticktype="detailed")
+image(x,y,z)
+contour(x,y,z,add=TRUE)
+```
+
++ 50
+
+```{r eval=TRUE}
+x <- seq(-5,5,length=50)
+y <- seq(-5,5,length=50)
+
+z <- outer(x,y,function(x,y) 6-2*x-3*y)
+
+persp(x,y,z,theta=-30,expand=0.6,ticktype="detailed")
+persp(x,y,z,theta=30,expand=0.6,ticktype="detailed")
+image(x,y,z)
+contour(x,y,z,add=TRUE)
+```
+
++ 51
+
+```{r eval=TRUE}
+x <- seq(-3,3,length=50)
+y <- seq(-3,3,length=50)
+
+z <- outer(x,y,function(x,y) x^2+4*y^2)
+
+persp(x,y,z,theta=-30,expand=0.5,ticktype="detailed")
+persp(x,y,z,theta=30,expand=0.5,ticktype="detailed")
+image(x,y,z)
+contour(x,y,z,add=TRUE)
+```
+
++ 52 
+
+```{r eval=TRUE}
+x <- seq(-3,3,length=60)
+y <- seq(-3,3,length=60)
+
+z <- outer(x,y,function(x,y) sqrt(9-x^2-y^2))
+
+z[is.na(z)] <- 0
+
+persp(x,y,z,theta=-30,expand=0.5,ticktype="detailed")
+persp(x,y,z,theta=30,expand=0.5,ticktype="detailed")
+image(x,y,z)
+contour(x,y,z,add=TRUE)
+```
+
++ 53
+
+```{r eval=TRUE}
+x <- seq(-3,3,length=60)
+y <- seq(-3,3,length=60)
+
+z <- outer(x,y,function(x,y) x*y)
+
+persp(x,y,z,theta=-30,expand=0.6,ticktype="detailed")
+persp(x,y,z,theta=30,expand=0.6,ticktype="detailed")
+image(x,y,z)
+contour(x,y,z,add=TRUE)
+```
+
++54
+
+```{r eval=TRUE}
+x <- seq(-2,2,length=60)
+y <- seq(-2,2,length=60)
+
+z <- outer(x,y,function(x,y) exp(x*y/2))
+
+persp(x,y,z,theta=-30,expand=0.6,ticktype="detailed")
+persp(x,y,z,theta=30,expand=0.6,ticktype="detailed")
+image(x,y,z)
+contour(x,y,z,add=TRUE)
+```
+
++55
+
+```{r eval=TRUE}
+x <- seq(-3,3,length=80)
+y <- seq(-3,3,length=80)
+
+z <- outer(x,y,function(x,y){
+
+    valor <- x/(x^2+y^2)
+
+    valor[(x==0)&(y==0)] <- 0
+
+    valor
+
+})
+
+z[is.infinite(z)] <- 0
+z[is.nan(z)] <- 0
+
+persp(x,y,z,theta=-30,expand=0.5,ticktype="detailed")
+persp(x,y,z,theta=30,expand=0.5,ticktype="detailed")
+image(x,y,z)
+contour(x,y,z,add=TRUE)
+```
+
++56
+
+```{r eval=TRUE}
+x <- seq(-3,3,length=80)
+y <- seq(-3,3,length=80)
+
+z <- outer(x,y,function(x,y){
+
+    ifelse(x>y, log(x-y), NA)
+
+})
+
+persp(x,y,z,
+      theta=-30,
+      expand=0.6,
+      ticktype="detailed",
+      na.rm=TRUE)
+
+persp(x,y,z,
+      theta=30,
+      expand=0.6,
+      ticktype="detailed",
+      na.rm=TRUE)
+
+image(x,y,z)
+
+contour(x,y,z,add=TRUE)
+```
+
